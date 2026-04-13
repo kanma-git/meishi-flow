@@ -2,7 +2,7 @@
   "name": "MEISHI Flow",
   "short_name": "MEISHI",
   "description": "名刺スキャン → 自動メール送信",
-  "start_url": "./meishi-flow-pwa.html",
+  "start_url": "/meishi-flow/",
   "display": "standalone",
   "background_color": "#0a0a1a",
   "theme_color": "#0a0a1a",
