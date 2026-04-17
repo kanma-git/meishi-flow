@@ -138,3 +138,80 @@ cd ~/Downloads/dev/dev_名刺Flow_WEB用
 
 - GASプロジェクト: https://script.google.com/d/1y8i_GG6Z11aKlkOc_wE3if0J4yUJfcpf16ZS56SUs9ay4zs7Sg0_Tcpn/edit
 - GitHubリポジトリ: https://github.com/kanma-git/meishi-flow
+
+
+## 📌 全体の仕組みを理解する
+→ メールの本文を修正
+→ スクリプト プロパティでAPIキーを設定
+→ スプレッドシートIDを転記
+
+function doPost(e) {
+  try {
+    const params = JSON.parse(e.postData.contents);
+    const imageBase64 = params.image;
+    const myName = params.myName || "傳田";
+    
+    const apiKey = PropertiesService.getScriptProperties().getProperty("GEMINI_API_KEY");
+    const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey;
+    
+    const prompt = `
+    添付された名刺画像から以下の情報を抽出し、JSON形式でのみ回答してください。
+    JSONのキーは必ず以下にしてください:
+    companyName (社名), industry (業種・推測でOK), contactName (担当者名), title (役職), email (メールアドレス), phone (電話番号), address (住所)
+    抽出できない項目は空文字("")にしてください。
+    `;
+
+    const payload = {
+      "contents": [{
+        "parts": [
+          {"text": prompt},
+          {"inlineData": {"mimeType": "image/jpeg", "data": imageBase64}}
+        ]
+      }],
+      "generationConfig": {"responseMimeType": "application/json"}
+    };
+    
+    const options = {
+      "method": "post",
+      "contentType": "application/json",
+      "payload": JSON.stringify(payload)
+    };
+    
+    const response = UrlFetchApp.fetch(url, options);
+    const jsonStr = JSON.parse(response.getContentText()).candidates[0].content.parts[0].text;
+    const data = JSON.parse(jsonStr);
+    
+    const sheet = SpreadsheetApp.openById("スプレッドシートID").getActiveSheet();
+    sheet.appendRow([
+      new Date(), myName, data.companyName, data.industry,
+      data.contactName, data.title, data.email, data.phone, data.address
+    ]);
+    
+    // ↓↓↓ 件名・本文のみ変更 ↓↓↓
+    const subject = `■名刺交換の御礼■ AI企業 ㈱Aitane:傳田`;
+    const body = `${data.companyName}
+${data.contactName}様
+
+株式会社Aitane（アイタネ）の傳田(デンダ)でございます。
+お名刺交換をありがとうございます。
+
+本日のお話を踏まえ、一度情報交換の機会を頂けましたら幸いです。
+お手数ですが、下記日程リンクよりご都合の良い日時をご選択ください。
+
+▼日程調整リンク（カレンダーから空き枠を選ぶだけで完了します）
+https://calendar.app.google/K4yApH9WKKUTme3q9
+
+よろしくお願いいたします。`;
+    // ↑↑↑ 変更ここまで ↑↑↑
+    
+    if(data.email) {
+      GmailApp.sendEmail(data.email, subject, body);
+    }
+    
+    return ContentService.createTextOutput("Success!");
+    
+  } catch(error) {
+    Logger.log(error.toString());
+    return ContentService.createTextOutput("Error: " + error.toString());
+  }
+}
