@@ -140,10 +140,12 @@ cd ~/Downloads/dev/dev_名刺Flow_WEB用
 - GitHubリポジトリ: https://github.com/kanma-git/meishi-flow
 
 
-## 📌 全体の仕組みを理解する
+## 📌 コピペ用
 → メールの本文を修正
 → スクリプト プロパティでAPIキーを設定
 → スプレッドシートIDを転記
+
+以下のコードを全てコピペ
 
 function doPost(e) {
   try {
