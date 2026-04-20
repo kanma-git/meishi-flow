@@ -147,6 +147,7 @@ cd ~/Downloads/dev/dev_名刺Flow_WEB用
 
 以下のコードを全てコピペ（コード.jsよりも最新：2026/04/20更新）
 
+```javascript
 /**
  * 名刺画像を Gemini で解析 → スプレッドシートに追記 → 御礼メール送信
  * 修正点:
@@ -390,3 +391,4 @@ function jsonResponse(obj) {
     .createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
 }
+```
