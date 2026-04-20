@@ -188,7 +188,7 @@ function doPost(e) {
 
     // ---- スプレッドシート追記 ---------------------------------------
     const sheet = SpreadsheetApp
-      .openById("1HV7p3OFchwRScv1OVLNiA7mSnlgqxwW_DL54n0e4-5M")
+      .openById("スプレッドシートIDを入力")
       .getActiveSheet();
     sheet.appendRow([
       startedAt, myName,
