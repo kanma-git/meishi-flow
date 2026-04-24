@@ -145,7 +145,7 @@ cd ~/Downloads/dev/dev_名刺Flow_WEB用
 → スクリプト プロパティでAPIキーを設定
 → スプレッドシートIDを転記
 
-以下のコードを全てコピペ（コード.jsよりも最新：2026/04/20更新）
+以下のコードを全てコピペ（コード.jsよりも最新：2026/04/24更新）
 
 ```javascript
 /**
@@ -157,6 +157,7 @@ cd ~/Downloads/dev/dev_名刺Flow_WEB用
  *  4. MIME タイプを実バイトから自動判定(Android の WebP/PNG 対応)
  *  5. 429/503 向けにリトライ機構
  *  6. 呼び出し元に JSON で成否を返す
+ *  7. Base64のデータURLプレフィックスを除去(Android/iOS断続エラー対策)
  */
 function doPost(e) {
   const startedAt = new Date();
@@ -166,7 +167,7 @@ function doPost(e) {
       throw new Error("リクエストボディが空です");
     }
     const params = JSON.parse(e.postData.contents);
-    const imageBase64 = params.image;
+    const imageBase64 = (params.image || "").replace(/^data:[^;]+;base64,/, "");
     const myName = params.myName || "傳田";
     if (!imageBase64) throw new Error("image(base64)が未指定です");
 
