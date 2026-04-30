@@ -314,14 +314,14 @@
 
   // ── 設定の保存・読み込み ──
   function loadConfig() {
-    const url = localStorage.getItem('meishi_gas_url') || '';
-    const name = localStorage.getItem('meishi_my_name') || '';
+    const url = localStorage.getItem('flow_gas_url') || '';
+    const name = localStorage.getItem('flow_my_name') || '';
     document.getElementById('gasUrl').value = url;
     document.getElementById('myName').value = name;
   }
   function saveConfig() {
-    localStorage.setItem('meishi_gas_url', document.getElementById('gasUrl').value.trim());
-    localStorage.setItem('meishi_my_name', document.getElementById('myName').value.trim());
+    localStorage.setItem('flow_gas_url', document.getElementById('gasUrl').value.trim());
+    localStorage.setItem('flow_my_name', document.getElementById('myName').value.trim());
   }
   document.getElementById('gasUrl').addEventListener('change', saveConfig);
   document.getElementById('myName').addEventListener('change', saveConfig);
@@ -337,7 +337,7 @@
 
   // ── 履歴の読み込み ──
   function loadHistory() {
-    const history = JSON.parse(localStorage.getItem('meishi_history') || '[]');
+    const history = JSON.parse(localStorage.getItem('flow_history') || '[]');
     if (history.length === 0) return;
     document.getElementById('historySection').style.display = 'block';
     const list = document.getElementById('historyList');
@@ -349,11 +349,11 @@
     ).join('');
   }
   function addHistory(company, name) {
-    const history = JSON.parse(localStorage.getItem('meishi_history') || '[]');
+    const history = JSON.parse(localStorage.getItem('flow_history') || '[]');
     const now = new Date();
     const time = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
     history.unshift({ company, name, time });
-    localStorage.setItem('meishi_history', JSON.stringify(history.slice(0, 50)));
+    localStorage.setItem('flow_history', JSON.stringify(history.slice(0, 50)));
     loadHistory();
   }
   loadHistory();
@@ -381,7 +381,7 @@
   // ── GASへ送信 ──
   async function sendCard() {
     const gasUrl = document.getElementById('gasUrl').value.trim();
-    const myName = document.getElementById('myName').value.trim() || '菅間';
+    const myName = document.getElementById('myName').value.trim() || '';
 
     if (!gasUrl) {
       alert('設定を開いてGAS Web App URLを入力してください。');
@@ -403,7 +403,9 @@
 
       showResult(true, '送信しました（スプレッドシートで結果を確認してください）');
     } catch (err) {
-      showResult(false, 'ネットワークエラー: ' + err.message);
+      showResult(false, 'ネットワークエラー',
+        'ブラウザからGASへの通信に失敗しました。',
+        'GAS URLが正しいか、インターネット接続を確認してください。\n（詳細: ' + err.message + '）');
     } finally {
       document.getElementById('loading').classList.remove('show');
       document.getElementById('sendBtn').disabled = false;
@@ -411,12 +413,12 @@
   }
 
   // ── 結果表示 ──
-  function showResult(success, message) {
+  // success=true: showResult(true, message)
+  // success=false: showResult(false, title, where, cause)
+  function showResult(success, message, where, cause) {
     const area = document.getElementById('resultArea');
 
     if (success) {
-      // GASから返る "Success!" の場合は成功扱い
-      // 注: 現在のGASはJSONではなく "Success!" を返す仕様
       area.innerHTML = `
         <div class="result-card">
           <div class="result-header">
@@ -430,7 +432,7 @@
             </div>
             <div class="row">
               <span class="key">メモ</span>
-              <span class="val">スプレッドシートに記録＆メール送信済み</span>
+              <span class="val">スプレッドシートに記録＆メール下書き作成済み</span>
             </div>
           </div>
         </div>`;
@@ -440,18 +442,25 @@
         <div class="result-card">
           <div class="result-header">
             <div class="dot dot-error"></div>
-            <span>エラー</span>
+            <span>${escapeHtml(message)}</span>
           </div>
           <div class="result-body">
             <div class="row">
-              <span class="key">詳細</span>
-              <span class="val">${escapeHtml(message)}</span>
+              <span class="key">どこで</span>
+              <span class="val">${escapeHtml(where || '不明')}</span>
+            </div>
+            <div class="row">
+              <span class="key">原因</span>
+              <span class="val">${escapeHtml(cause || '不明なエラー')}</span>
+            </div>
+            <div class="row">
+              <span class="key">ヒント</span>
+              <span class="val">GAS側のエラーはApps Scriptの「実行数」ログで詳細を確認できます</span>
             </div>
           </div>
         </div>`;
     }
 
-    // 撮影エリアをリセット
     resetCapture();
   }
 
